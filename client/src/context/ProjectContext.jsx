@@ -58,6 +58,7 @@ export const ProjectProvider = ({ children }) => {
   }, [projectData, bomData, salesData, specData, materialClassData, calculatedResults]);
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  console.log("Using Backend URL:", API_URL);
 
   const login = async (email, password) => {
     try {
