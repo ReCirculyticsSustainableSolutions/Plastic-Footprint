@@ -94,6 +94,7 @@ export const ProjectProvider = ({ children }) => {
           toast.error("Please login to save to cloud");
           return;
       }
+      setLoading(true);
       try {
           await axios.post(`${API_URL}/api/projects`, {
               projectData,
@@ -107,8 +108,11 @@ export const ProjectProvider = ({ children }) => {
           });
           toast.success("Project saved to cloud successfully!");
       } catch (err) {
-          console.error(err);
-          toast.error("Failed to save project");
+          console.error("Save Error:", err);
+          const errorMsg = err.response ? err.response.data.error || err.response.data.message : err.message;
+          toast.error(`Failed to save: ${errorMsg}`);
+      } finally {
+          setLoading(false);
       }
   };
 
