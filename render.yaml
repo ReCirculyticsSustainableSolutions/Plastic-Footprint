@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: footprint-server
+    env: node
+    plan: free
+    root: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
