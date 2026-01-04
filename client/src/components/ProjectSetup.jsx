@@ -3,7 +3,7 @@ import { useProject } from '../context/ProjectContext';
 import { Save } from 'lucide-react';
 
 const ProjectSetup = () => {
-  const { projectData, setProjectData, setActiveTab, saveProjectToCloud, token } = useProject();
+  const { projectData, setProjectData, setActiveTab, saveProjectToCloud, token, loading } = useProject();
 
   const handleChange = (e) => {
     const { name, value } = e.target;

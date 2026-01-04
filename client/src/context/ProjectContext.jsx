@@ -26,6 +26,7 @@ export const ProjectProvider = ({ children }) => {
   const [materialClassData, setMaterialClassData] = useState([]);
   const [calculatedResults, setCalculatedResults] = useState([]);
   const [activeTab, setActiveTab] = useState('project');
+  const [loading, setLoading] = useState(false);
 
   // Load from localStorage on mount (optional, for persistence)
   useEffect(() => {
@@ -193,6 +194,7 @@ export const ProjectProvider = ({ children }) => {
       materialClassData, setMaterialClassData,
       calculatedResults, setCalculatedResults,
       activeTab, setActiveTab,
+      loading, setLoading,
       calculateFootprints,
       clearAll
     }}>
