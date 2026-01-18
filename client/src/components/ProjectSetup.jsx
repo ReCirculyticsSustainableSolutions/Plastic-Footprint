@@ -15,6 +15,14 @@ const ProjectSetup = () => {
       alert('Please fill all required fields (marked with *)');
       return;
     }
+    
+    // Auto-save project setup data to cloud/DB when moving to next step
+    if (token) {
+        saveProjectToCloud(); 
+    } else {
+        alert("Warning: You are not logged in. Your data will NOT be saved to the database. Please Login first.");
+    }
+    
     setActiveTab('input');
   };
 
@@ -27,15 +35,6 @@ const ProjectSetup = () => {
                 Initialize your packaging footprint analysis project with organization details and compliance period.
             </p>
           </div>
-          {token && (
-              <button 
-                onClick={saveProjectToCloud}
-                disabled={loading}
-                className={`flex items-center gap-2 px-4 py-2 bg-[#F1F5F9] text-[#0F4C63] border border-[#E2E8F0] rounded hover:bg-[#E2E8F0] transition text-sm font-semibold ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                  <Save size={16} /> {loading ? 'Saving...' : 'Save to Cloud'}
-              </button>
-          )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

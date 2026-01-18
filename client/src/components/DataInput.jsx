@@ -16,7 +16,10 @@ const DataInput = () => {
     salesData, setSalesData, 
     specData, setSpecData, 
     materialClassData, setMaterialClassData,
-    calculateFootprints
+    calculateFootprints,
+    token,
+    saveProjectToCloud,
+    setActiveTab
   } = useProject();
 
   // Helper to read Excel
@@ -237,15 +240,25 @@ const DataInput = () => {
         </AnimatePresence>
       </div>
 
-      <div className="flex justify-end pt-6 border-t border-[#E2E8F0]">
-          <motion.button 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={calculateFootprints}
-            className="flex items-center gap-2 bg-gradient-to-r from-[#0F4C63] to-[#06B6D4] text-white px-8 py-3 rounded-lg font-bold hover:shadow-lg transition shadow-md"
-          >
-              Run Calculations
-          </motion.button>
+      <div className="flex justify-between mt-6 pt-6 border-t border-[#E2E8F0]">
+        <button
+            onClick={() => {
+                if(token) saveProjectToCloud(); // Auto-save input data
+                setActiveTab('setup');
+            }}
+            className="px-6 py-2 text-[#475569] hover:text-[#0F172A] font-medium transition"
+        >
+            ← Back to Setup
+        </button>
+        <button
+            onClick={() => {
+                if(token) saveProjectToCloud(); // Auto-save input data before calculation
+                calculateFootprints();
+            }}
+            className="bg-[#0F4C63] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#0D3A4A] transition shadow-lg flex items-center gap-2"
+        >
+             Run Calculation & Save →
+        </button>
       </div>
     </motion.div>
   );

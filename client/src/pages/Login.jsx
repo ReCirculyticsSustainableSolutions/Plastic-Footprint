@@ -6,34 +6,82 @@ import toast from 'react-hot-toast';
 const Login = () => {
   const [activeTab, setActiveTab] = useState('login');
   const navigate = useNavigate();
-  const { login, signup } = useProject();
+  const { login, signup, forgotPassword } = useProject();
 
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
   });
+  const [resetData, setResetData] = useState({
+    email: '',
+    newPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleResetChange = (e) => {
+    setResetData({ ...resetData, [e.target.name]: e.target.value });
+  };
+
   const handleLogin = async () => {
+    if (!formData.email || !formData.password) {
+      toast.error('Please enter email and password');
+      return;
+    }
+    setLoading(true);
     const result = await login(formData.email, formData.password);
+    setLoading(false);
     if (result.success) {
+      toast.success('Signed in successfully');
       navigate('/');
     } else {
-      alert(result.message);
+      toast.error(result.message || 'Login failed');
     }
   };
 
   const handleSignup = async () => {
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error('Please fill all fields');
+      return;
+    }
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    setLoading(true);
     const result = await signup(formData.name, formData.email, formData.password);
+    setLoading(false);
     if (result.success) {
-      alert('Account created! Please login.');
+      toast.success('Account created. Please sign in.');
       setActiveTab('login');
+      setFormData(prev => ({ ...prev, password: '' }));
     } else {
-      alert(result.message);
+      toast.error(result.message || 'Signup failed');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!resetData.email || !resetData.newPassword) {
+      toast.error('Please enter email and new password');
+      return;
+    }
+    if (resetData.newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    setLoading(true);
+    const result = await forgotPassword(resetData.email, resetData.newPassword);
+    setLoading(false);
+    if (result.success) {
+      toast.success('Password updated. Please sign in with new password.');
+      setActiveTab('login');
+      setResetData({ email: '', newPassword: '' });
+    } else {
+      toast.error(result.message || 'Password reset failed');
     }
   };
 
@@ -66,6 +114,16 @@ const Login = () => {
           >
             Sign Up
           </button>
+          <button
+            className={`flex-1 pb-3 font-semibold transition-colors border-b-2 -mb-[2px] ${
+              activeTab === 'forgot'
+                ? 'border-[#0F4C63] text-[#0F4C63]'
+                : 'border-transparent text-[#475569] hover:text-[#0F172A]'
+            }`}
+            onClick={() => setActiveTab('forgot')}
+          >
+            Forgot Password
+          </button>
         </div>
 
         {activeTab === 'login' && (
@@ -94,9 +152,12 @@ const Login = () => {
             </div>
             <button
               onClick={handleLogin}
-              className="w-full bg-[#0F4C63] text-white py-3 rounded font-semibold hover:bg-[#0D3A4A] transition"
+              disabled={loading}
+              className={`w-full bg-[#0F4C63] text-white py-3 rounded font-semibold transition ${
+                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#0D3A4A]'
+              }`}
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
         )}
@@ -137,10 +198,49 @@ const Login = () => {
               />
             </div>
             <button
-               onClick={handleSignup}
-              className="w-full bg-[#0F4C63] text-white py-3 rounded font-semibold hover:bg-[#0D3A4A] transition"
+              onClick={handleSignup}
+              disabled={loading}
+              className={`w-full bg-[#0F4C63] text-white py-3 rounded font-semibold transition ${
+                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#0D3A4A]'
+              }`}
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </div>
+        )}
+
+        {activeTab === 'forgot' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#0F172A]">Email</label>
+              <input
+                type="email"
+                name="email"
+                value={resetData.email}
+                onChange={handleResetChange}
+                placeholder="you@example.com"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#0F172A]">New Password</label>
+              <input
+                type="password"
+                name="newPassword"
+                value={resetData.newPassword}
+                onChange={handleResetChange}
+                placeholder="••••••••"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+              />
+            </div>
+            <button
+              onClick={handleForgotPassword}
+              disabled={loading}
+              className={`w-full bg-[#0F4C63] text-white py-3 rounded font-semibold transition ${
+                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#0D3A4A]'
+              }`}
+            >
+              {loading ? 'Updating Password...' : 'Reset Password'}
             </button>
           </div>
         )}

@@ -8,7 +8,7 @@ import { useProject } from '../context/ProjectContext';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { activeTab } = useProject();
+  const { activeTab, user, logout } = useProject();
   const navigate = useNavigate();
 
   return (
@@ -37,12 +37,27 @@ const Dashboard = () => {
             </div>
             
             <div className="flex gap-4 items-center">
-               <button 
-                onClick={() => navigate('/login')}
-                className="bg-white text-[#0F4C63] px-4 py-2 rounded font-semibold hover:bg-gray-100 transition shadow-sm"
-               >
-                 Login / Sign Up
-               </button>
+              {user ? (
+                <>
+                  <div className="text-right">
+                    <div className="font-semibold text-sm">{user.name}</div>
+                    <div className="text-xs opacity-80">{user.email}</div>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="bg-white text-[#0F4C63] px-4 py-2 rounded font-semibold hover:bg-gray-100 transition shadow-sm"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="bg-white text-[#0F4C63] px-4 py-2 rounded font-semibold hover:bg-gray-100 transition shadow-sm"
+                >
+                  Login / Sign Up
+                </button>
+              )}
             </div>
           </div>
         </header>

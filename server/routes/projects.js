@@ -18,6 +18,10 @@ const verifyToken = (req, res, next) => {
 
 // Save Project
 router.post('/', verifyToken, async (req, res) => {
+  console.log("📥 Received Save Request");
+  console.log("User:", req.user._id);
+  console.log("Data Keys:", Object.keys(req.body));
+  
   try {
     const { projectData, bomData, salesData, specData, materialClassData, calculatedResults } = req.body;
     
@@ -26,14 +30,17 @@ router.post('/', verifyToken, async (req, res) => {
     
     // If we passed a project ID in body, update it.
     if (req.body._id) {
+       console.log("🔄 Updating existing project:", req.body._id);
        const updatedProject = await Project.findOneAndUpdate(
            { _id: req.body._id, userId: req.user._id },
            { projectData, bomData, salesData, specData, materialClassData, calculatedResults, updatedAt: Date.now() },
            { new: true }
        );
+       console.log("✅ Update successful");
        return res.json(updatedProject);
     }
 
+    console.log("🆕 Creating new project");
     const newProject = new Project({
       userId: req.user._id,
       projectData,
@@ -45,8 +52,10 @@ router.post('/', verifyToken, async (req, res) => {
     });
 
     const savedProject = await newProject.save();
+    console.log("✅ Save successful:", savedProject._id);
     res.json(savedProject);
   } catch (err) {
+    console.error("❌ Save Failed:", err);
     res.status(500).json({ error: err.message });
   }
 });

@@ -7,7 +7,15 @@ const ProjectContext = createContext();
 export const useProject = () => useContext(ProjectContext);
 
 export const ProjectProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('user');
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState(localStorage.getItem('token') || '');
 
   const [projectData, setProjectData] = useState({
@@ -67,6 +75,7 @@ export const ProjectProvider = ({ children }) => {
       setToken(res.data.token);
       setUser(res.data.user);
       localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
       return { success: true };
     } catch (err) {
       console.error(err);
@@ -84,32 +93,47 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
+  const forgotPassword = async (email, newPassword) => {
+    try {
+      await axios.post(`${API_URL}/api/user/forgot-password`, { email, newPassword });
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || 'Password reset failed' };
+    }
+  };
+
   const logout = () => {
     setToken('');
     setUser(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
   };
 
-  const saveProjectToCloud = async () => {
+  const saveProjectToCloud = async (newResults = null) => {
+      console.log("saveProjectToCloud called");
+      console.log("Token:", token);
+      console.log("API URL:", API_URL);
       if (!token) {
           toast.error("Please login to save to cloud");
           return;
       }
       setLoading(true);
       try {
-          await axios.post(`${API_URL}/api/projects`, {
+          console.log("Sending POST request...");
+          const res = await axios.post(`${API_URL}/api/projects`, {
               projectData,
               bomData,
               salesData,
               specData,
               materialClassData,
-              calculatedResults
+              calculatedResults: newResults || calculatedResults
           }, {
               headers: { 'auth-token': token }
           });
+          console.log("Save Response:", res.data);
           toast.success("Project saved to cloud successfully!");
       } catch (err) {
-          console.error("Save Error:", err);
+          console.error("Save Error Details:", err);
           const errorMsg = err.response ? err.response.data.error || err.response.data.message : err.message;
           toast.error(`Failed to save: ${errorMsg}`);
       } finally {
@@ -167,6 +191,18 @@ export const ProjectProvider = ({ children }) => {
 
     setCalculatedResults(results);
     setActiveTab('results');
+    
+    // Auto-save calculated results to cloud/DB immediately
+    if (token) {
+       // We need to wait for state update or pass results directly. 
+       // Since state update is async, let's call save with explicit new results or ensure saveProjectToCloud uses latest state.
+       // Ideally, saveProjectToCloud reads from state which might be stale in this closure.
+       // Better approach: modify saveProjectToCloud to accept optional data override, or just trigger it.
+       // For simplicity, we'll assume state update happens fast enough or we pass the new results to a modified save function.
+       // Let's modify saveProjectToCloud to optionally take data to save.
+       saveProjectToCloud(results); 
+    }
+    
     toast.success(`Calculated ${results.length} rows successfully!`);
   };
 
@@ -186,7 +222,7 @@ export const ProjectProvider = ({ children }) => {
 
   return (
     <ProjectContext.Provider value={{
-      user, token, login, signup, logout, saveProjectToCloud,
+      user, token, login, signup, logout, forgotPassword, saveProjectToCloud,
       projectData, setProjectData,
       bomData, setBomData,
       salesData, setSalesData,
