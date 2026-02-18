@@ -1,1 +1,1 @@
-# Plastic-Footprint
+# packaging-footprint

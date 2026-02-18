@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packaging Footprint Calculator - EPR Compliance</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <script>
+        // ⚠️ IMPORTANT: Replace this config with YOUR Firebase credentials from Project Settings
+        const firebaseConfig = {
+            apiKey: "AIzaSyAvuD-IIcjj_kEFhDqU8qtYoHYBeoml_lo",
+            authDomain: "epr-packaging-calculator.firebaseapp.com",
+            databaseURL: "https://epr-packaging-calculator-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "epr-packaging-calculator",
+            storageBucket: "epr-packaging-calculator.firebasestorage.app",
+            messagingSenderId: "519080690744",
+            appId: "1:519080690744:web:d4f0f4c645fc8b980292cd",
+            measurementId: "G-HHV3MRBZ8D"
+        };
+        
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log('✅ Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+        }
+    </script>
+    <style>
+        :root {
+            --color-primary: #0F4C63;
+            --color-primary-hover: #0D3A4A;
+            --color-primary-light: #1B6B8E;
+            --color-secondary: #06B6D4;
+            --color-text: #0F172A;
+            --color-text-secondary: #475569;
+            --color-text-tertiary: #94A3B8;
+            --color-bg: #F8FAFC;
+            --color-bg-alt: #F1F5F9;
+            --color-surface: #FFFFFF;
+            --color-border: #E2E8F0;
+            --color-success: #16A34A;
+            --color-warning: #EA580C;
+            --color-error: #DC2626;
+            --color-accent: #06B6D4;
+            --space-1: 1px;
+            --space-2: 2px;
+            --space-4: 4px;
+            --space-6: 6px;
+            --space-8: 8px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-20: 20px;
+            --space-24: 24px;
+            --space-32: 32px;
+            --space-40: 40px;
+            --radius-xs: 4px;
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.03);
+            --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px 0 rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -1px rgba(15, 23, 42, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.15), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+            --transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+            color: white;
+            padding: var(--space-24);
+            box-shadow: var(--shadow-lg);
+            overflow-y: auto;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: var(--space-24);
+            padding-bottom: var(--space-16);
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-section {
+            margin-bottom: var(--space-20);
+        }
+
+        .sidebar-section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: var(--space-12);
+            font-weight: 600;
+        }
+
+        .sidebar-item {
+            padding: var(--space-12) var(--space-16);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            margin-bottom: var(--space-8);
+            transition: var(--transition);
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(255,255,255,0.08);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .sidebar-item.active {
+            background: rgba(255,255,255,0.2);
+            font-weight: 600;
+            border-left-color: var(--color-secondary);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: var(--space-24);
+            overflow-y: auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            color: white;
+            padding: var(--space-40) var(--space-32);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-32);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        header h1 {
+            font-size: 36px;
+            margin-bottom: var(--space-12);
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header p {
+            font-size: 16px;
+            opacity: 0.92;
+            max-width: 700px;
+            line-height: 1.7;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tabs {
+            display: flex;
+            gap: var(--space-4);
+            margin-bottom: var(--space-24);
+            border-bottom: 2px solid var(--color-border);
+            padding: 0;
+        }
+
+        .tab-btn {
+            padding: var(--space-16) var(--space-20);
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            transition: all 200ms;
+            font-size: 15px;
+        }
+
+        .tab-btn:hover {
+            color: var(--color-text);
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            margin-bottom: var(--space-24);
+            box-shadow: var(--shadow-xs);
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-secondary);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-24);
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: var(--space-8);
+            font-size: 13px;
+            color: var(--color-text);
+            text-transform: capitalize;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: var(--space-12) var(--space-16);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--color-bg-alt);
+            color: var(--color-text);
+            transition: var(--transition);
+        }
+
+        .form-group input:hover,
+        .form-group select:hover,
+        .form-group textarea:hover {
+            border-color: var(--color-secondary);
+            background: var(--color-surface);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            background: var(--color-surface);
+            box-shadow: 0 0 0 3px rgba(15, 76, 99, 0.08), 0 0 0 1px var(--color-primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-16);
+        }
+
+        .btn {
+            padding: var(--space-12) var(--space-20);
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 14px;
+            text-transform: none;
+            letter-spacing: 0.2px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            color: white;
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--color-primary-hover) 0%, var(--color-primary) 100%);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--color-bg);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-border);
+            border-color: var(--color-text-secondary);
+        }
+
+        .btn-small {
+            padding: var(--space-8) var(--space-14);
+            font-size: 13px;
+        }
+
+        .btn-danger {
+            background: var(--color-error);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #B91C1C;
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-area {
+            border: 2px dashed var(--color-secondary);
+            border-radius: var(--radius-lg);
+            padding: var(--space-32) var(--space-24);
+            text-align: center;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(15, 76, 99, 0.03) 100%);
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            transform: translateX(-100%);
+        }
+
+        .upload-area:hover::before {
+            transform: translateX(100%);
+        }
+
+        .upload-area:hover {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(15, 76, 99, 0.05) 100%);
+            border-color: var(--color-secondary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .upload-area.dragover {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(15, 76, 99, 0.08) 100%);
+            border-color: var(--color-primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: var(--space-16);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f5f5f5;
+            padding: var(--space-12);
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--color-border);
+            color: var(--color-text);
+        }
+
+        td {
+            padding: var(--space-12);
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        tr:hover {
+            background: #fafaf9;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-16);
+            margin-bottom: var(--space-24);
+        }
+
+        .stat-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            padding: var(--space-16);
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: var(--space-16) 0 var(--space-12) 0;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            font-weight: 700;
+        }
+
+        .stat-unit {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            margin-top: var(--space-8);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: var(--space-24);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-24);
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: var(--space-16);
+            border-radius: var(--radius);
+            margin-bottom: var(--space-16);
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: var(--space-16);
+            border-radius: var(--radius);
+            margin-bottom: var(--space-16);
+            border: 1px solid #f5c6cb;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--color-surface);
+            padding: var(--space-24);
+            border-radius: var(--radius);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: var(--space-16);
+        }
+
+        .modal-body {
+            margin-bottom: var(--space-24);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: var(--space-8);
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 250px;
+            }
+
+            header {
+                padding: var(--space-24);
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: var(--space-16);
+            }
+
+            .main-content {
+                padding: var(--space-16);
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: var(--space-24);
+            color: var(--color-text);
+            letter-spacing: -0.5px;
+        }
+
+        h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--color-text);
+            letter-spacing: -0.3px;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            margin: auto;
+            padding: var(--space-40) var(--space-24);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .auth-card {
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-32);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: var(--space-32);
+        }
+
+        .auth-header h1 {
+            font-size: 28px;
+            margin-bottom: var(--space-8);
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: var(--space-8);
+            margin-bottom: var(--space-24);
+            border-bottom: 2px solid var(--color-border);
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            padding: var(--space-12);
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            transition: all 200ms;
+        }
+
+        .auth-tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .auth-tab-content {
+            display: none;
+        }
+
+        .auth-tab-content.active {
+            display: block;
+        }
+
+        .phone-input-group {
+            display: flex;
+            gap: var(--space-8);
+            margin-bottom: var(--space-16);
+        }
+
+        .phone-input-group select {
+            width: 100px;
+        }
+
+        .phone-input-group input {
+            flex: 1;
+        }
+
+        .recaptcha-container {
+            margin: var(--space-16) 0;
+            padding: var(--space-16);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            background: var(--color-bg-alt);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: var(--space-16);
+            margin: var(--space-24) 0;
+            color: var(--color-text-secondary);
+            font-size: 13px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .btn-google {
+            background: white;
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-8);
+        }
+
+        .btn-google:hover {
+            background: var(--color-bg-alt);
+            border-color: var(--color-text-secondary);
+        }
+
+        .user-menu {
+            position: absolute;
+            top: var(--space-16);
+            right: var(--space-24);
+            display: flex;
+            align-items: center;
+            gap: var(--space-16);
+        }
+
+        .user-info {
+            text-align: right;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .auth-overlay.hidden {
+            display: none;
+        }
+
+        .auth-form {
+            background: white;
+            padding: var(--space-32);
+            border-radius: var(--radius-lg);
+            max-width: 400px;
+            width: 90%;
+            box-shadow: var(--shadow-xl);
+        }
+
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: var(--space-24);
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: var(--space-16);
+            font-size: 13px;
+            color: var(--color-text-secondary);
+        }
+
+        .auth-toggle button {
+            background: none;
+            border: none;
+            color: var(--color-primary);
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .save-to-cloud-btn {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white;
+            padding: var(--space-12) var(--space-16);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: var(--space-8);
+        }
+
+        .save-to-cloud-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .sync-status {
+            position: fixed;
+            bottom: var(--space-16);
+            right: var(--space-16);
+            padding: var(--space-12) var(--space-16);
+            background: white;
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: var(--space-8);
+            box-shadow: var(--shadow-md);
+        }
+
+        .sync-status.online {
+            border-color: #10B981;
+            background: #F0FDF4;
+            color: #15803D;
+        }
+
+        .sync-status.offline {
+            border-color: #F59E0B;
+            background: #FFFBEB;
+            color: #B45309;
+        }
+
+        .recent-projects {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .project-item {
+            padding: var(--space-12) var(--space-16);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius);
+            margin-bottom: var(--space-8);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .project-item:hover {
+            background: var(--color-bg-alt);
+            border-color: var(--color-secondary);
+        }
+
+        .project-item-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: var(--space-4);
+        }
+
+        .project-item-meta {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .project-item-actions {
+            display: flex;
+            gap: var(--space-8);
+        }
+
+        .project-item-actions button {
+            padding: var(--space-6) var(--space-10);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .sync-indicator {
+            font-size: 12px;
+            color: var(--color-success);
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .sync-indicator.offline {
+            color: var(--color-warning);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(22, 163, 74, 0.3);
+            border-top-color: var(--color-success);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <h2>📦 Packaging Footprint</h2>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Navigation</div>
+                <div class="sidebar-item active" onclick="setActiveStage('project'); updateSidebar(this)">⚙️ Project Setup</div>
+                <div class="sidebar-item" onclick="setActiveStage('input'); updateSidebar(this)">📊 Data Input</div>
+                <div class="sidebar-item" onclick="setActiveStage('results'); updateSidebar(this)">📈 Calculations</div>
+                <div class="sidebar-item" onclick="setActiveStage('analytics'); updateSidebar(this)">📉 Analytics</div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Project Info</div>
+                <div style="font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.6;">
+                    <div style="margin-bottom: var(--space-12);">
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.6);">PROJECT NAME</div>
+                        <div id="projNameDisplay" style="font-weight: 600;">Not Set</div>
+                    </div>
+                    <div style="margin-bottom: var(--space-12);">
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.6);">ORGANIZATION</div>
+                        <div id="projOrgDisplay" style="font-weight: 600;">Not Set</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.6);">PERIOD</div>
+                        <div id="projPeriodDisplay" style="font-weight: 600;">Not Set</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <header>
+                <div class="user-menu">
+                    <div class="user-info" id="userInfo" style="display: none;">
+                        <div class="user-name" id="userName">User</div>
+                        <div class="user-email" id="userEmail"></div>
+                    </div>
+                    <button class="btn btn-primary" id="authBtn" onclick="showAuthForm()">Login / Sign Up</button>
+                    <button class="btn btn-secondary" id="logoutBtn" onclick="logout()" style="display: none;">Logout</button>
+                </div>
+                <h1>📦 Packaging Footprint Calculator</h1>
+                <p>Enterprise-grade EPR compliance tool for comprehensive packaging material tracking - Plastic, Paper, Metal, Glass & More</p>
+            </header>
+
+            <!-- PROJECT SETUP TAB -->
+            <div id="project" class="tab-content active">
+                <div class="card">
+                    <h2 style="margin-bottom: var(--space-24);">Project Setup</h2>
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-24); font-size: 15px;">
+                        Initialize your packaging footprint analysis project with organization details and compliance period.
+                    </p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Project Name *</label>
+                            <input type="text" id="projName" placeholder="e.g., Q4 2025 EPR Compliance Analysis">
+                        </div>
+                        <div class="form-group">
+                            <label>Organization Name *</label>
+                            <input type="text" id="projOrg" placeholder="e.g., Your Company Ltd.">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Analysis Start Date *</label>
+                            <input type="date" id="projStartDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Analysis End Date *</label>
+                            <input type="date" id="projEndDate">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Reporting Standard</label>
+                            <select id="projStandard">
+                                <option value="">Select Standard</option>
+                                <option value="India EPR Rules 2016">India EPR Rules 2016</option>
+                                <option value="India EPR Rules 2022 Amendment">India EPR Rules 2022 Amendment</option>
+                                <option value="Extended Producer Responsibility Rules">Extended Producer Responsibility Rules</option>
+                                <option value="Custom">Custom</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Primary Facility Location</label>
+                            <select id="projLocation">
+                                <option value="">Select State/Region</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Sikkim">Sikkim</option>
+                                <option value="Pan-India">Pan-India</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Project Description / Notes</label>
+                        <textarea id="projNotes" placeholder="Add any relevant notes about this project..." style="min-height: 120px; resize: vertical;"></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: var(--space-16); margin-top: var(--space-32);">
+                        <button class="btn btn-primary" onclick="saveProject()">✓ Save & Continue to Data Input</button>
+                        <button class="btn btn-secondary" onclick="clearProjectForm()">Clear Form</button>
+                        <button class="save-to-cloud-btn" onclick="saveProjectToFirebase()" id="saveCloudBtn" style="display: none;">☁️ Save to Cloud</button>
+                    </div>
+                </div>
+
+                <div id="projectSavedMsg" style="display: none;"></div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('input')">Data Input</button>
+                <button class="tab-btn" onclick="switchTab('results')">Calculations</button>
+                <button class="tab-btn" onclick="switchTab('analytics')">Analytics Dashboard</button>
+            </div>
+
+        <!-- INPUT TAB -->
+        <div id="input" class="tab-content active">
+            <div class="tabs" style="border-bottom: 1px solid var(--color-border); margin-bottom: var(--space-16);">
+                <button class="tab-btn active" onclick="switchInputTab('bom')" style="padding: var(--space-12);">Bill of Material</button>
+                <button class="tab-btn" onclick="switchInputTab('sales')" style="padding: var(--space-12);">Sales Data</button>
+                <button class="tab-btn" onclick="switchInputTab('spec')" style="padding: var(--space-12);">Specification</button>
+                <button class="tab-btn" onclick="switchInputTab('material')" style="padding: var(--space-12);">Material Classification</button>
+            </div>
+
+            <!-- Bill of Material Input -->
+            <div id="bom-input" class="input-tab active">
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Bill of Material - Single Entry</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SKU Code</label>
+                            <input type="text" id="bomSkuCode" placeholder="e.g., FG002785">
+                        </div>
+                        <div class="form-group">
+                            <label>SKU Description</label>
+                            <input type="text" id="bomSkuDesc" placeholder="e.g., Dream Fresh Tomato Ketchup, 415g Pouch">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Component Code</label>
+                            <input type="text" id="bomCompCode" placeholder="e.g., M09590842">
+                        </div>
+                        <div class="form-group">
+                            <label>Component Description</label>
+                            <input type="text" id="bomCompDesc" placeholder="e.g., Dream Ketchup Laminate 415g">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Standard Consumption (Per MT)</label>
+                            <input type="number" id="bomConsumption" placeholder="e.g., 52.0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Unit of Measure</label>
+                            <select id="bomUom">
+                                <option value="">Select UOM</option>
+                                <option value="KG">KG</option>
+                                <option value="NOS">NOS (Pieces)</option>
+                                <option value="ROL">ROL (Rolls)</option>
+                                <option value="LTR">LTR (Liters)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Packaging Type</label>
+                        <select id="bomPackType">
+                            <option value="">Select Type</option>
+                            <option value="Consumer Packaging">Consumer Packaging</option>
+                            <option value="Customer Packaging">Customer Packaging</option>
+                            <option value="Transport Packaging">Transport Packaging</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: var(--space-16); margin-top: var(--space-24);">
+                        <button class="btn btn-primary" onclick="addBomEntry()">Add BOM Entry</button>
+                        <button class="btn btn-secondary" onclick="clearBomForm()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Bill of Material - Bulk Upload</h3>
+                    <div class="upload-area" id="bomUploadArea">
+                        <div style="font-size: 24px; margin-bottom: var(--space-8);">📥</div>
+                        <p><strong>Upload Bill of Material Sheet (Excel)</strong></p>
+                        <input type="file" id="bomFileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    </div>
+                    <div id="bomUploadMessage" style="margin-top: var(--space-16);"></div>
+                </div>
+            </div>
+
+            <!-- Sales Data Input -->
+            <div id="sales-input" class="input-tab" style="display: none;">
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Sales Data - Single Entry</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="salesDate">
+                        </div>
+                        <div class="form-group">
+                            <label>SKU Code</label>
+                            <input type="text" id="salesSkuCode" placeholder="e.g., FG002785">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>SKU Description</label>
+                            <input type="text" id="salesSkuDesc" placeholder="e.g., Dream Fresh Tomato Ketchup, 415g Pouch">
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <select id="salesState">
+                                <option value="">Select State</option>
+                                <option value="Maharashtra">Maharashtra</option>
+                                <option value="Goa">Goa</option>
+                                <option value="Haryana">Haryana</option>
+                                <option value="Madhya Pradesh">Madhya Pradesh</option>
+                                <option value="Karnataka">Karnataka</option>
+                                <option value="Sikkim">Sikkim</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Sales Quantity (Net Wt. in MT)</label>
+                        <input type="number" id="salesQty" placeholder="e.g., 35.72" step="0.01">
+                    </div>
+                    <div style="display: flex; gap: var(--space-16); margin-top: var(--space-24);">
+                        <button class="btn btn-primary" onclick="addSalesEntry()">Add Sales Entry</button>
+                        <button class="btn btn-secondary" onclick="clearSalesForm()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Sales Data - Bulk Upload</h3>
+                    <div class="upload-area" id="salesUploadArea">
+                        <div style="font-size: 24px; margin-bottom: var(--space-8);">📥</div>
+                        <p><strong>Upload Sales Sheet (Excel)</strong></p>
+                        <input type="file" id="salesFileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    </div>
+                    <div id="salesUploadMessage" style="margin-top: var(--space-16);"></div>
+                </div>
+            </div>
+
+            <!-- Specification Input -->
+            <div id="spec-input" class="input-tab" style="display: none;">
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Component Specification - Single Entry</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Component Code</label>
+                            <input type="text" id="specCompCode" placeholder="e.g., M09590842">
+                        </div>
+                        <div class="form-group">
+                            <label>Component Description</label>
+                            <input type="text" id="specCompDesc" placeholder="e.g., Dream Ketchup Laminate 415g">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Base UOM</label>
+                            <select id="specBaseUom">
+                                <option value="">Select UOM</option>
+                                <option value="KG">KG</option>
+                                <option value="NOS">NOS</option>
+                                <option value="ROL">ROL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Material</label>
+                            <input type="text" id="specMaterial" placeholder="e.g., LLDPE- Linear Low-Density Polyethylene">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Material Composition %</label>
+                            <input type="number" id="specComposition" placeholder="0-100" min="0" max="100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Recycled Content %</label>
+                            <input type="number" id="specRecycled" placeholder="0-100" min="0" max="100" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Weight per piece (in Grams)</label>
+                            <input type="number" id="specWeight" placeholder="e.g., 1000" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Flexibility</label>
+                            <select id="specFlexibility">
+                                <option value="">Select</option>
+                                <option value="Flexible">Flexible</option>
+                                <option value="Rigid">Rigid</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Material Classification</label>
+                        <select id="specMaterialClass">
+                            <option value="">Select Classification</option>
+                            <option value="Plastic">Plastic</option>
+                            <option value="Paper">Paper</option>
+                            <option value="Metal">Metal</option>
+                            <option value="Glass">Glass</option>
+                            <option value="Ink & Adhesive">Ink & Adhesive</option>
+                            <option value="Non Obligated">Non Obligated</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: var(--space-16); margin-top: var(--space-24);">
+                        <button class="btn btn-primary" onclick="addSpecEntry()">Add Specification</button>
+                        <button class="btn btn-secondary" onclick="clearSpecForm()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Specification - Bulk Upload</h3>
+                    <div class="upload-area" id="specUploadArea">
+                        <div style="font-size: 24px; margin-bottom: var(--space-8);">📥</div>
+                        <p><strong>Upload Specification Sheet (Excel)</strong></p>
+                        <input type="file" id="specFileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    </div>
+                    <div id="specUploadMessage" style="margin-top: var(--space-16);"></div>
+                </div>
+            </div>
+
+            <!-- Material Classification Input -->
+            <div id="material-input" class="input-tab" style="display: none;">
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Material Classification - Single Entry</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Material</label>
+                            <input type="text" id="matMaterial" placeholder="e.g., LLDPE- Linear Low-Density Polyethylene">
+                        </div>
+                        <div class="form-group">
+                            <label>Material Classification</label>
+                            <select id="matClassification">
+                                <option value="">Select Classification</option>
+                                <option value="Plastic">Plastic</option>
+                                <option value="Paper">Paper</option>
+                                <option value="Metal">Metal</option>
+                                <option value="Glass">Glass</option>
+                                <option value="Ink & Adhesive">Ink & Adhesive</option>
+                                <option value="Non Obligated">Non Obligated</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: var(--space-16); margin-top: var(--space-24);">
+                        <button class="btn btn-primary" onclick="addMatEntry()">Add Classification</button>
+                        <button class="btn btn-secondary" onclick="clearMatForm()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-bottom: var(--space-16);">Material Classification - Bulk Upload</h3>
+                    <div class="upload-area" id="matUploadArea">
+                        <div style="font-size: 24px; margin-bottom: var(--space-8);">📥</div>
+                        <p><strong>Upload Material Classification Sheet (Excel)</strong></p>
+                        <input type="file" id="matFileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+                    </div>
+                    <div id="matUploadMessage" style="margin-top: var(--space-16);"></div>
+                </div>
+            </div>
+
+            <!-- Calculate Button Section -->
+            <div class="card" style="background: linear-gradient(135deg, rgba(33, 128, 160, 0.1) 0%, rgba(33, 128, 160, 0.05) 100%); border: 2px solid var(--color-primary);">
+                <div style="text-align: center;">
+                    <h3 style="margin-bottom: var(--space-16); color: var(--color-primary);">Ready to Calculate Footprints?</h3>
+                    <p style="margin-bottom: var(--space-24); color: #666; font-size: 14px;">
+                        Ensure all 4 data sheets are loaded (Bill of Material, Sales Data, Specification, Material Classification) before proceeding.
+                    </p>
+                    <button class="btn btn-primary" onclick="calculateFootprints()" style="padding: var(--space-16) var(--space-24); font-size: 16px;">
+                        🧮 Calculate Packaging Footprints
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS TAB -->
+        <div id="results" class="tab-content">
+            <div id="resultMessage"></div>
+
+            <div class="card">
+                <h2 style="margin-bottom: var(--space-24); font-size: 20px;">Summary Statistics</h2>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: var(--space-24); font-size: 20px;">Detailed Results</h2>
+                <div style="margin-bottom: var(--space-16);">
+                    <button class="btn btn-primary btn-small" onclick="exportResults()">📥 Export to Excel</button>
+                    <button class="btn btn-secondary btn-small" onclick="clearResults()" style="margin-left: var(--space-8);">🗑️ Clear All</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Material</th>
+                                <th>Sales (MT)</th>
+                                <th>Weight/MT (KG)</th>
+                                <th>Footprint (MT)</th>
+                                <th>Recycled Content %</th>
+                                <th>Recycled Content (MT)</th>
+                                <th>State</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS TAB -->
+        <div id="analytics" class="tab-content">
+            <div class="card">
+                <h2 style="margin-bottom: var(--space-24); font-size: 20px;">Analytics Overview</h2>
+                <div class="charts-grid">
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: var(--space-16);">Material-wise Footprint</h3>
+                        <div class="chart-container">
+                            <canvas id="materialChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: var(--space-16);">SKU-wise Footprint</h3>
+                        <div class="chart-container">
+                            <canvas id="skuChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid" style="margin-top: var(--space-24);">
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: var(--space-16);">State-wise Distribution</h3>
+                        <div class="chart-container">
+                            <canvas id="stateChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 16px; margin-bottom: var(--space-16);">Recycled Content Tracking</h3>
+                        <div class="chart-container">
+                            <canvas id="recycledChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: var(--space-24); font-size: 20px;">EPR Compliance Insights</h2>
+                <div class="stats-grid" id="insightsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Preview Data</div>
+            <div class="modal-body" id="previewBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmUpload()">Confirm & Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authOverlay" class="auth-overlay hidden" onclick="if(event.target === this) closeAuthForm()">
+        <div class="auth-form">
+            <h2 id="authTitle">Login</h2>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="authEmail" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="authPassword" placeholder="At least 8 characters">
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" id="authSubmitBtn" onclick="handleAuth()">Login</button>
+            <div class="auth-toggle">
+                <span id="authToggleText">Don't have an account?</span>
+                <button onclick="toggleAuthMode()"><span id="authToggleLink">Sign Up</span></button>
+            </div>
+            <button class="btn btn-secondary" style="width: 100%; margin-top: var(--space-16);" onclick="closeAuthForm()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Sync Status Indicator -->
+    <div class="sync-status online" id="syncStatus">
+        <span>● Online</span>
+    </div>
+
+    <script>
+        // Data structures for 4 input sheets
+        let bomData = [];
+        let salesData = [];
+        let specData = [];
+        let materialClassData = [];
+        let calculatedResults = [];
+        let charts = {};
+        let projectData = {
+            name: '',
+            org: '',
+            startDate: '',
+            endDate: '',
+            standard: '',
+            location: '',
+            notes: ''
+        };
+
+        let currentUser = null;
+        let authMode = 'login'; // 'login' or 'signup'
+
+        // ========== AUTHENTICATION ==========
+        firebase.auth().onAuthStateChanged((user) => {
+            currentUser = user;
+            updateAuthUI();
+            if (user) {
+                loadUserProjects();
+                document.getElementById('saveCloudBtn').style.display = 'inline-block';
+            }
+        });
+
+        function updateAuthUI() {
+            const authBtn = document.getElementById('authBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userInfo = document.getElementById('userInfo');
+            
+            if (currentUser) {
+                authBtn.style.display = 'none';
+                logoutBtn.style.display = 'inline-block';
+                userInfo.style.display = 'block';
+                document.getElementById('userName').textContent = currentUser.displayName || 'User';
+                document.getElementById('userEmail').textContent = currentUser.email;
+            } else {
+                authBtn.style.display = 'inline-block';
+                logoutBtn.style.display = 'none';
+                userInfo.style.display = 'none';
+            }
+        }
+
+        function showAuthForm() {
+            authMode = 'login';
+            document.getElementById('authOverlay').classList.remove('hidden');
+            document.getElementById('authTitle').textContent = 'Login';
+            document.getElementById('authSubmitBtn').textContent = 'Login';
+            document.getElementById('authToggleText').textContent = "Don't have an account?";
+            document.getElementById('authToggleLink').textContent = 'Sign Up';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+        }
+
+        function closeAuthForm() {
+            document.getElementById('authOverlay').classList.add('hidden');
+        }
+
+        function toggleAuthMode() {
+            authMode = authMode === 'login' ? 'signup' : 'login';
+            const title = document.getElementById('authTitle');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const toggleText = document.getElementById('authToggleText');
+            const toggleLink = document.getElementById('authToggleLink');
+            
+            if (authMode === 'signup') {
+                title.textContent = 'Create Account';
+                submitBtn.textContent = 'Sign Up';
+                toggleText.textContent = 'Already have an account?';
+                toggleLink.textContent = 'Login';
+            } else {
+                title.textContent = 'Login';
+                submitBtn.textContent = 'Login';
+                toggleText.textContent = "Don't have an account?";
+                toggleLink.textContent = 'Sign Up';
+            }
+        }
+
+        async function handleAuth() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                if (authMode === 'login') {
+                    await firebase.auth().signInWithEmailAndPassword(email, password);
+                    closeAuthForm();
+                    alert('✅ Logged in successfully!');
+                } else {
+                    await firebase.auth().createUserWithEmailAndPassword(email, password);
+                    await firebase.auth().currentUser.updateProfile({displayName: email.split('@')[0]});
+                    closeAuthForm();
+                    alert('✅ Account created! Welcome!');
+                }
+            } catch (error) {
+                alert('❌ ' + error.message);
+            }
+        }
+
+        function logout() {
+            if (confirm('Logout from your account?')) {
+                firebase.auth().signOut();
+                alert('Logged out successfully');
+            }
+        }
+
+        async function saveProjectToFirebase() {
+            if (!currentUser) {
+                alert('Please login first to save projects to cloud');
+                showAuthForm();
+                return;
+            }
+
+            if (!projectData.name) {
+                alert('Please setup project first');
+                return;
+            }
+
+            try {
+                const projectId = Date.now();
+                await firebase.database().ref(`users/${currentUser.uid}/projects/${projectId}`).set({
+                    ...projectData,
+                    results: calculatedResults,
+                    bomData: bomData,
+                    salesData: salesData,
+                    specData: specData,
+                    timestamp: new Date().toISOString()
+                });
+                alert('✅ Project saved to cloud successfully!');
+            } catch (error) {
+                alert('❌ Error saving to cloud: ' + error.message);
+            }
+        }
+
+        function loadUserProjects() {
+            if (!currentUser) return;
+            
+            firebase.database().ref(`users/${currentUser.uid}/projects`).on('value', (snapshot) => {
+                const projects = snapshot.val();
+                if (projects) {
+                    const projectList = Object.entries(projects).map(([id, proj]) => {
+                        return `<div class="project-item">
+                            <div>
+                                <div class="project-item-name">${proj.name}</div>
+                                <div class="project-item-meta">${proj.org} • ${new Date(proj.timestamp).toLocaleDateString()}</div>
+                            </div>
+                            <div class="project-item-actions">
+                                <button class="btn btn-secondary btn-small" onclick="loadProject('${id}')">Load</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteProject('${id}')">Delete</button>
+                            </div>
+                        </div>`;
+                    }).join('');
+                    
+                    const recentSection = document.querySelector('.recent-projects');
+                    if (recentSection) {
+                        recentSection.innerHTML = projectList || '<p style="text-align: center; color: #999;">No saved projects yet</p>';
+                    }
+                }
+            });
+        }
+
+        function loadProject(projectId) {
+            if (!currentUser) return;
+            
+            firebase.database().ref(`users/${currentUser.uid}/projects/${projectId}`).once('value', (snapshot) => {
+                const proj = snapshot.val();
+                if (proj) {
+                    projectData = {name: proj.name, org: proj.org, startDate: proj.startDate, endDate: proj.endDate, standard: proj.standard, location: proj.location, notes: proj.notes};
+                    bomData = proj.bomData || [];
+                    salesData = proj.salesData || [];
+                    specData = proj.specData || [];
+                    calculatedResults = proj.results || [];
+                    
+                    document.getElementById('projName').value = proj.name;
+                    document.getElementById('projOrg').value = proj.org;
+                    document.getElementById('projStartDate').value = proj.startDate;
+                    document.getElementById('projEndDate').value = proj.endDate;
+                    document.getElementById('projNameDisplay').textContent = proj.name;
+                    document.getElementById('projOrgDisplay').textContent = proj.org;
+                    
+                    if (calculatedResults.length > 0) {
+                        displayResults();
+                        switchTab('results');
+                    }
+                    alert('✅ Project loaded!');
+                }
+            });
+        }
+
+        function deleteProject(projectId) {
+            if (!currentUser || !confirm('Delete this project?')) return;
+            
+            firebase.database().ref(`users/${currentUser.uid}/projects/${projectId}`).remove();
+            alert('Project deleted');
+        }
+
+        // Check online status
+        window.addEventListener('online', () => {
+            document.getElementById('syncStatus').textContent = '● Online';
+            document.getElementById('syncStatus').className = 'sync-status online';
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('syncStatus').textContent = '● Offline (Local Mode)';
+            document.getElementById('syncStatus').className = 'sync-status offline';
+        });
+
+        // Project Setup Functions
+        function saveProject() {
+            const name = document.getElementById('projName').value;
+            const org = document.getElementById('projOrg').value;
+            const startDate = document.getElementById('projStartDate').value;
+            const endDate = document.getElementById('projEndDate').value;
+
+            if (!name || !org || !startDate || !endDate) {
+                alert('Please fill all required fields (marked with *)');
+                return;
+            }
+
+            projectData = {
+                name: name,
+                org: org,
+                startDate: startDate,
+                endDate: endDate,
+                standard: document.getElementById('projStandard').value,
+                location: document.getElementById('projLocation').value,
+                notes: document.getElementById('projNotes').value
+            };
+
+            // Update sidebar
+            document.getElementById('projNameDisplay').textContent = name;
+            document.getElementById('projOrgDisplay').textContent = org;
+            document.getElementById('projPeriodDisplay').textContent = `${startDate} to ${endDate}`;
+
+            // Show success message
+            const msgDiv = document.getElementById('projectSavedMsg');
+            msgDiv.innerHTML = '<div class="success-message" style="margin-top: var(--space-24);">✅ Project initialized successfully! You can now proceed to Data Input.</div>';
+            msgDiv.style.display = 'block';
+
+            // Auto switch to input tab after 1.5 seconds
+            setTimeout(() => {
+                setActiveStage('input');
+                switchTab('input');
+            }, 1500);
+        }
+
+        function clearProjectForm() {
+            document.getElementById('projName').value = '';
+            document.getElementById('projOrg').value = '';
+            document.getElementById('projStartDate').value = '';
+            document.getElementById('projEndDate').value = '';
+            document.getElementById('projStandard').value = '';
+            document.getElementById('projLocation').value = '';
+            document.getElementById('projNotes').value = '';
+        }
+
+        function setActiveStage(stage) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            const element = document.getElementById(stage);
+            if (element) {
+                element.classList.add('active');
+            }
+        }
+
+        function updateSidebar(element) {
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // Main tab switching (Input, Results, Analytics)
+        function switchTab(tabName) {
+            document.querySelectorAll('#input, #results, #analytics').forEach(tab => tab.classList.remove('active'));
+            const element = document.getElementById(tabName);
+            if (element) {
+                element.classList.add('active');
+            }
+            document.querySelectorAll('.tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (tabName === 'analytics') {
+                setTimeout(() => updateCharts(), 100);
+            }
+        }
+
+        // Input sub-tab switching
+        function switchInputTab(tabName) {
+            document.querySelectorAll('.input-tab').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName + '-input').style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        // ========== BILL OF MATERIAL ==========
+        function addBomEntry() {
+            const skuCode = document.getElementById('bomSkuCode').value;
+            const skuDesc = document.getElementById('bomSkuDesc').value;
+            const compCode = document.getElementById('bomCompCode').value;
+            const compDesc = document.getElementById('bomCompDesc').value;
+            const consumption = parseFloat(document.getElementById('bomConsumption').value);
+            const uom = document.getElementById('bomUom').value;
+            const packType = document.getElementById('bomPackType').value;
+
+            if (!skuCode || !compCode || !consumption || !uom || !packType) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            bomData.push({skuCode, skuDesc, compCode, compDesc, consumption, uom, packType});
+            document.getElementById('bomUploadMessage').innerHTML = `<div class="success-message">✅ BOM entry added (Total: ${bomData.length})</div>`;
+            clearBomForm();
+        }
+
+        function clearBomForm() {
+            document.getElementById('bomSkuCode').value = '';
+            document.getElementById('bomSkuDesc').value = '';
+            document.getElementById('bomCompCode').value = '';
+            document.getElementById('bomCompDesc').value = '';
+            document.getElementById('bomConsumption').value = '';
+            document.getElementById('bomUom').value = '';
+            document.getElementById('bomPackType').value = '';
+        }
+
+        function setupBomUpload() {
+            const uploadArea = document.getElementById('bomUploadArea');
+            const fileInput = document.getElementById('bomFileInput');
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {e.preventDefault(); uploadArea.classList.add('dragover');});
+            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+            uploadArea.addEventListener('drop', (e) => {e.preventDefault(); uploadArea.classList.remove('dragover'); uploadBomFile(e.dataTransfer.files[0]);});
+            fileInput.addEventListener('change', (e) => uploadBomFile(e.target.files[0]));
+        }
+
+        function uploadBomFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, {type: 'binary'});
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+                    bomData = rows.map(r => ({
+                        skuCode: r['SKU Code'] || '',
+                        skuDesc: r['SKU Description'] || '',
+                        compCode: r['Component Code'] || '',
+                        compDesc: r['Component Description'] || '',
+                        consumption: parseFloat(r['Standard Consumption (Per MT)'] || 0),
+                        uom: r['UOM'] || '',
+                        packType: r['Packaging Type'] || ''
+                    })).filter(r => r.skuCode && r.compCode && r.consumption > 0);
+                    document.getElementById('bomUploadMessage').innerHTML = `<div class="success-message">✅ ${bomData.length} BOM rows imported</div>`;
+                } catch (error) {
+                    document.getElementById('bomUploadMessage').innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        // ========== SALES DATA ==========
+        function addSalesEntry() {
+            const date = document.getElementById('salesDate').value;
+            const skuCode = document.getElementById('salesSkuCode').value;
+            const skuDesc = document.getElementById('salesSkuDesc').value;
+            const state = document.getElementById('salesState').value;
+            const qty = parseFloat(document.getElementById('salesQty').value);
+
+            if (!date || !skuCode || !state || !qty) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            salesData.push({date, skuCode, skuDesc, state, qty});
+            document.getElementById('salesUploadMessage').innerHTML = `<div class="success-message">✅ Sales entry added (Total: ${salesData.length})</div>`;
+            clearSalesForm();
+        }
+
+        function clearSalesForm() {
+            document.getElementById('salesDate').value = '';
+            document.getElementById('salesSkuCode').value = '';
+            document.getElementById('salesSkuDesc').value = '';
+            document.getElementById('salesState').value = '';
+            document.getElementById('salesQty').value = '';
+        }
+
+        function setupSalesUpload() {
+            const uploadArea = document.getElementById('salesUploadArea');
+            const fileInput = document.getElementById('salesFileInput');
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {e.preventDefault(); uploadArea.classList.add('dragover');});
+            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+            uploadArea.addEventListener('drop', (e) => {e.preventDefault(); uploadArea.classList.remove('dragover'); uploadSalesFile(e.dataTransfer.files[0]);});
+            fileInput.addEventListener('change', (e) => uploadSalesFile(e.target.files[0]));
+        }
+
+        function uploadSalesFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, {type: 'binary'});
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+                    salesData = rows.map(r => ({
+                        date: r['Date'] || '',
+                        skuCode: r['SKU Code'] || '',
+                        skuDesc: r['SKU Description'] || '',
+                        state: r['State'] || '',
+                        qty: parseFloat(r['Sales Qty (Net Wt.) (In MT)'] || r['Sales Qty'] || 0)
+                    })).filter(r => r.skuCode && r.qty > 0);
+                    document.getElementById('salesUploadMessage').innerHTML = `<div class="success-message">✅ ${salesData.length} sales rows imported</div>`;
+                } catch (error) {
+                    document.getElementById('salesUploadMessage').innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        // ========== SPECIFICATION ==========
+        function addSpecEntry() {
+            const compCode = document.getElementById('specCompCode').value;
+            const compDesc = document.getElementById('specCompDesc').value;
+            const baseUom = document.getElementById('specBaseUom').value;
+            const material = document.getElementById('specMaterial').value;
+            const composition = parseFloat(document.getElementById('specComposition').value);
+            const recycled = parseFloat(document.getElementById('specRecycled').value) || 0;
+            const weight = parseFloat(document.getElementById('specWeight').value);
+            const flexibility = document.getElementById('specFlexibility').value;
+            const matClass = document.getElementById('specMaterialClass').value;
+
+            if (!compCode || !material || !composition || !weight || !matClass) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            specData.push({compCode, compDesc, baseUom, material, composition, recycled, weight, flexibility, matClass});
+            document.getElementById('specUploadMessage').innerHTML = `<div class="success-message">✅ Specification added (Total: ${specData.length})</div>`;
+            clearSpecForm();
+        }
+
+        function clearSpecForm() {
+            document.getElementById('specCompCode').value = '';
+            document.getElementById('specCompDesc').value = '';
+            document.getElementById('specBaseUom').value = '';
+            document.getElementById('specMaterial').value = '';
+            document.getElementById('specComposition').value = '';
+            document.getElementById('specRecycled').value = '';
+            document.getElementById('specWeight').value = '';
+            document.getElementById('specFlexibility').value = '';
+            document.getElementById('specMaterialClass').value = '';
+        }
+
+        function setupSpecUpload() {
+            const uploadArea = document.getElementById('specUploadArea');
+            const fileInput = document.getElementById('specFileInput');
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {e.preventDefault(); uploadArea.classList.add('dragover');});
+            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+            uploadArea.addEventListener('drop', (e) => {e.preventDefault(); uploadArea.classList.remove('dragover'); uploadSpecFile(e.dataTransfer.files[0]);});
+            fileInput.addEventListener('change', (e) => uploadSpecFile(e.target.files[0]));
+        }
+
+        function uploadSpecFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, {type: 'binary'});
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+                    specData = rows.map(r => ({
+                        compCode: r['Component Code'] || '',
+                        compDesc: r['Component Description'] || '',
+                        baseUom: r['Base UOM'] || '',
+                        material: r['Material'] || '',
+                        composition: parseFloat(r['Material Composition %'] || 0),
+                        recycled: parseFloat(r['Recycled Content %'] || 0),
+                        weight: parseFloat(r['Weight / pc (In Grms)'] || 0),
+                        flexibility: r['Flexibility'] || '',
+                        matClass: r['Material Classification'] || ''
+                    })).filter(r => r.compCode && r.material && r.weight > 0);
+                    document.getElementById('specUploadMessage').innerHTML = `<div class="success-message">✅ ${specData.length} specification rows imported</div>`;
+                } catch (error) {
+                    document.getElementById('specUploadMessage').innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        // ========== MATERIAL CLASSIFICATION ==========
+        function addMatEntry() {
+            const material = document.getElementById('matMaterial').value;
+            const classification = document.getElementById('matClassification').value;
+
+            if (!material || !classification) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            materialClassData.push({material, classification});
+            document.getElementById('matUploadMessage').innerHTML = `<div class="success-message">✅ Classification added (Total: ${materialClassData.length})</div>`;
+            clearMatForm();
+        }
+
+        function clearMatForm() {
+            document.getElementById('matMaterial').value = '';
+            document.getElementById('matClassification').value = '';
+        }
+
+        function setupMatUpload() {
+            const uploadArea = document.getElementById('matUploadArea');
+            const fileInput = document.getElementById('matFileInput');
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', (e) => {e.preventDefault(); uploadArea.classList.add('dragover');});
+            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+            uploadArea.addEventListener('drop', (e) => {e.preventDefault(); uploadArea.classList.remove('dragover'); uploadMatFile(e.dataTransfer.files[0]);});
+            fileInput.addEventListener('change', (e) => uploadMatFile(e.target.files[0]));
+        }
+
+        function uploadMatFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, {type: 'binary'});
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+                    materialClassData = rows.map(r => ({
+                        material: r['Material'] || '',
+                        classification: r['Material Classification'] || ''
+                    })).filter(r => r.material && r.classification);
+                    document.getElementById('matUploadMessage').innerHTML = `<div class="success-message">✅ ${materialClassData.length} classifications imported</div>`;
+                } catch (error) {
+                    document.getElementById('matUploadMessage').innerHTML = `<div class="error-message">Error: ${error.message}</div>`;
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        // Initialize all upload handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            setupBomUpload();
+            setupSalesUpload();
+            setupSpecUpload();
+            setupMatUpload();
+        });
+
+        function showPreview(data) {
+            const preview = data.slice(0, 10).map(row => `
+                <tr>
+                    <td>${row.sku}</td>
+                    <td>${row.material}</td>
+                    <td>${row.salesQty}</td>
+                    <td>${row.weight}</td>
+                    <td>${row.recycled}%</td>
+                    <td>${row.state}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('previewBody').innerHTML = `
+                <p>Found <strong>${data.length}</strong> rows to import. Preview (first 10):</p>
+                <div class="table-responsive" style="margin-top: var(--space-16);">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>SKU</th>
+                                <th>Material</th>
+                                <th>Sales (MT)</th>
+                                <th>Weight/MT</th>
+                                <th>Recycled %</th>
+                                <th>State</th>
+                            </tr>
+                        </thead>
+                        <tbody>${preview}</tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('previewModal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('previewModal').classList.remove('show');
+        }
+
+        function confirmUpload() {
+            const data = window.pendingData;
+            allData = allData.concat(data.map(row => ({
+                ...row,
+                footprint: (row.salesQty * row.weight) / 1000,
+                recycledContent: ((row.salesQty * row.weight) / 1000) * (row.recycled / 100)
+            })));
+
+            closeModal();
+            document.getElementById('uploadMessage').innerHTML = `<div class="success-message">✅ ${data.length} rows imported successfully</div>`;
+            displayResults();
+            switchTab('results');
+        }
+
+        // Calculate footprint from all 4 data sources
+        function calculateFootprints() {
+            if (bomData.length === 0 || salesData.length === 0 || specData.length === 0) {
+                alert('Please load all required data sheets: Bill of Material, Sales Data, and Specification');
+                return;
+            }
+
+            calculatedResults = [];
+
+            salesData.forEach(sale => {
+                const bomEntries = bomData.filter(b => b.skuCode === sale.skuCode);
+                
+                bomEntries.forEach(bom => {
+                    const spec = specData.find(s => s.compCode === bom.compCode);
+                    
+                    if (spec) {
+                        // Footprint calculation formula from Excel
+                        // Footprint (MT) = (Sales Qty MT × Standard Consumption per MT × Weight/pc gms) / 1,000,000
+                        const footprintMT = (sale.qty * bom.consumption * spec.weight) / 1000000;
+                        const recycledContentMT = footprintMT * (spec.recycled / 100);
+                        
+                        const matClassRecord = materialClassData.find(m => m.material === spec.material);
+                        const classification = matClassRecord ? matClassRecord.classification : spec.matClass;
+
+                        calculatedResults.push({
+                            skuCode: sale.skuCode,
+                            skuDesc: sale.skuDesc,
+                            compCode: bom.compCode,
+                            compDesc: bom.compDesc,
+                            material: spec.material,
+                            materialClass: classification,
+                            salesQty: sale.qty,
+                            consumption: bom.consumption,
+                            weight: spec.weight,
+                            footprint: footprintMT,
+                            recycledPct: spec.recycled,
+                            recycledContent: recycledContentMT,
+                            state: sale.state,
+                            date: sale.date,
+                            flexibility: spec.flexibility
+                        });
+                    }
+                });
+            });
+
+            if (calculatedResults.length === 0) {
+                alert('No matching data found. Check that SKU codes and Component codes align across sheets.');
+                return;
+            }
+
+            displayResults();
+            switchTab('results');
+        }
+
+        function displayResults() {
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = calculatedResults.map((row, idx) => `
+                <tr>
+                    <td>${row.skuCode}</td>
+                    <td>${row.compCode}</td>
+                    <td>${row.material}</td>
+                    <td>${row.materialClass}</td>
+                    <td>${row.salesQty.toFixed(2)}</td>
+                    <td>${row.consumption.toFixed(2)}</td>
+                    <td>${row.weight.toFixed(2)}</td>
+                    <td>${row.footprint.toFixed(6)}</td>
+                    <td>${row.recycledPct.toFixed(2)}%</td>
+                    <td>${row.recycledContent.toFixed(6)}</td>
+                    <td>${row.state}</td>
+                    <td><button class="btn btn-danger btn-small" onclick="deleteResult(${idx})">Delete</button></td>
+                </tr>
+            `).join('');
+
+            updateStats();
+        }
+
+        function deleteResult(idx) {
+            calculatedResults.splice(idx, 1);
+            displayResults();
+        }
+
+        function clearResults() {
+            if (confirm('Clear all calculated results?')) {
+                calculatedResults = [];
+                bomData = [];
+                salesData = [];
+                specData = [];
+                materialClassData = [];
+                document.getElementById('resultsBody').innerHTML = '';
+                document.getElementById('statsGrid').innerHTML = '';
+            }
+        }
+
+        function updateStats() {
+            const totalFootprint = calculatedResults.reduce((sum, row) => sum + row.footprint, 0);
+            const totalRecycled = calculatedResults.reduce((sum, row) => sum + row.recycledContent, 0);
+            const totalSales = calculatedResults.reduce((sum, row) => sum + row.salesQty, 0);
+
+            const materialGroups = {};
+            calculatedResults.forEach(row => {
+                materialGroups[row.materialClass] = (materialGroups[row.materialClass] || 0) + row.footprint;
+            });
+
+            const topMaterial = Object.entries(materialGroups).sort((a, b) => b[1] - a[1])[0];
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Footprint</div>
+                    <div class="stat-value">${totalFootprint.toFixed(2)}</div>
+                    <div class="stat-unit">MT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value">${totalSales.toFixed(2)}</div>
+                    <div class="stat-unit">MT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Recycled Content</div>
+                    <div class="stat-value">${totalRecycled.toFixed(2)}</div>
+                    <div class="stat-unit">MT</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Top Material</div>
+                    <div class="stat-value">${topMaterial ? topMaterial[0] : 'N/A'}</div>
+                    <div class="stat-unit">${topMaterial ? topMaterial[1].toFixed(2) + ' MT' : ''}</div>
+                </div>
+            `;
+        }
+
+        function updateCharts() {
+            if (calculatedResults.length === 0) {
+                document.getElementById('insightsGrid').innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999;">Calculate footprints first to view analytics.</p>';
+                return;
+            }
+
+            // Material Classification chart
+            const materialData = {};
+            calculatedResults.forEach(row => {
+                materialData[row.materialClass] = (materialData[row.materialClass] || 0) + row.footprint;
+            });
+
+            createChart('materialChart', 'doughnut', {
+                labels: Object.keys(materialData),
+                datasets: [{
+                    data: Object.values(materialData),
+                    backgroundColor: ['#2180A0', '#8B7A6B', '#D4572F', '#219090', '#A67C52', '#6B5D52']
+                }]
+            });
+
+            // SKU chart
+            const skuData = {};
+            calculatedResults.forEach(row => {
+                skuData[row.skuCode] = (skuData[row.skuCode] || 0) + row.footprint;
+            });
+
+            createChart('skuChart', 'bar', {
+                labels: Object.keys(skuData),
+                datasets: [{
+                    label: 'Footprint (MT)',
+                    data: Object.values(skuData),
+                    backgroundColor: '#2180A0'
+                }]
+            });
+
+            // State chart
+            const stateData = {};
+            calculatedResults.forEach(row => {
+                stateData[row.state] = (stateData[row.state] || 0) + row.footprint;
+            });
+
+            createChart('stateChart', 'bar', {
+                labels: Object.keys(stateData),
+                datasets: [{
+                    label: 'Footprint (MT)',
+                    data: Object.values(stateData),
+                    backgroundColor: '#219090'
+                }]
+            });
+
+            // Recycled content chart
+            const recycledData = {};
+            calculatedResults.forEach(row => {
+                recycledData[row.materialClass] = (recycledData[row.materialClass] || 0) + row.recycledContent;
+            });
+
+            createChart('recycledChart', 'doughnut', {
+                labels: Object.keys(recycledData),
+                datasets: [{
+                    data: Object.values(recycledData),
+                    backgroundColor: ['#2180A0', '#8B7A6B', '#D4572F', '#219090', '#A67C52', '#6B5D52']
+                }]
+            });
+
+            // Insights
+            const totalFootprint = calculatedResults.reduce((sum, row) => sum + row.footprint, 0);
+            const totalRecycled = calculatedResults.reduce((sum, row) => sum + row.recycledContent, 0);
+            const recycledPercent = totalFootprint > 0 ? ((totalRecycled / totalFootprint) * 100).toFixed(2) : 0;
+
+            document.getElementById('insightsGrid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Recycled Content %</div>
+                    <div class="stat-value">${recycledPercent}%</div>
+                    <div class="stat-unit">of total footprint</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Data Points</div>
+                    <div class="stat-value">${calculatedResults.length}</div>
+                    <div class="stat-unit">component entries</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">States Covered</div>
+                    <div class="stat-value">${new Set(calculatedResults.map(r => r.state)).size}</div>
+                    <div class="stat-unit">geographic regions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Material Categories</div>
+                    <div class="stat-value">${Object.keys(materialData).length}</div>
+                    <div class="stat-unit">types tracked</div>
+                </div>
+            `;
+        }
+
+        function createChart(canvasId, type, data) {
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            charts[canvasId] = new Chart(ctx, {
+                type: type,
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: type === 'doughnut' ? 'bottom' : 'none'
+                        }
+                    },
+                    scales: type === 'bar' ? {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Footprint (MT)' }
+                        }
+                    } : {}
+                }
+            });
+        }
+
+        function exportResults() {
+            if (calculatedResults.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+            
+            // Export calculated results
+            const resultsSheet = XLSX.utils.json_to_sheet(calculatedResults);
+            XLSX.utils.book_append_sheet(wb, resultsSheet, 'Calculated Results');
+            
+            // Export summary by material
+            const materialSummary = {};
+            calculatedResults.forEach(row => {
+                if (!materialSummary[row.materialClass]) {
+                    materialSummary[row.materialClass] = {material: row.materialClass, footprint: 0, recycledContent: 0, count: 0};
+                }
+                materialSummary[row.materialClass].footprint += row.footprint;
+                materialSummary[row.materialClass].recycledContent += row.recycledContent;
+                materialSummary[row.materialClass].count++;
+            });
+            const summarySheet = XLSX.utils.json_to_sheet(Object.values(materialSummary));
+            XLSX.utils.book_append_sheet(wb, summarySheet, 'Material Summary');
+            
+            XLSX.writeFile(wb, 'Packaging_Footprint_Analysis.xlsx');
+        }
+    </script>
+</body>
+</html>
