@@ -97,7 +97,7 @@ const Login = () => {
           <button
             className={`flex-1 pb-3 font-semibold transition-colors border-b-2 -mb-[2px] ${
               activeTab === 'login'
-                ? 'border-[#0F4C63] text-[#0F4C63]'
+                ? 'border-[#1D4ED8] text-[#1D4ED8]'
                 : 'border-transparent text-[#475569] hover:text-[#0F172A]'
             }`}
             onClick={() => setActiveTab('login')}
@@ -107,7 +107,7 @@ const Login = () => {
           <button
             className={`flex-1 pb-3 font-semibold transition-colors border-b-2 -mb-[2px] ${
               activeTab === 'signup'
-                ? 'border-[#0F4C63] text-[#0F4C63]'
+                ? 'border-[#1D4ED8] text-[#1D4ED8]'
                 : 'border-transparent text-[#475569] hover:text-[#0F172A]'
             }`}
             onClick={() => setActiveTab('signup')}
@@ -117,7 +117,7 @@ const Login = () => {
           <button
             className={`flex-1 pb-3 font-semibold transition-colors border-b-2 -mb-[2px] ${
               activeTab === 'forgot'
-                ? 'border-[#0F4C63] text-[#0F4C63]'
+                ? 'border-[#1D4ED8] text-[#1D4ED8]'
                 : 'border-transparent text-[#475569] hover:text-[#0F172A]'
             }`}
             onClick={() => setActiveTab('forgot')}
@@ -136,7 +136,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <div>
@@ -147,14 +147,14 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <button
               onClick={handleLogin}
               disabled={loading}
-              className={`w-full bg-[#0F4C63] text-white py-3 rounded font-semibold transition ${
-                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#0D3A4A]'
+              className={`w-full bg-[#1D4ED8] text-white py-3 rounded font-semibold transition ${
+                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#1E40AF]'
               }`}
             >
               {loading ? 'Signing In...' : 'Sign In'}
@@ -172,7 +172,7 @@ const Login = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="John Doe"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <div>
@@ -183,7 +183,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <div>
@@ -194,14 +194,14 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <button
               onClick={handleSignup}
               disabled={loading}
-              className={`w-full bg-[#0F4C63] text-white py-3 rounded font-semibold transition ${
-                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#0D3A4A]'
+              className={`w-full bg-[#1D4ED8] text-white py-3 rounded font-semibold transition ${
+                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#1E40AF]'
               }`}
             >
               {loading ? 'Creating Account...' : 'Create Account'}
@@ -219,7 +219,7 @@ const Login = () => {
                 value={resetData.email}
                 onChange={handleResetChange}
                 placeholder="you@example.com"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <div>
@@ -230,14 +230,14 @@ const Login = () => {
                 value={resetData.newPassword}
                 onChange={handleResetChange}
                 placeholder="••••••••"
-                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>
             <button
               onClick={handleForgotPassword}
               disabled={loading}
-              className={`w-full bg-[#0F4C63] text-white py-3 rounded font-semibold transition ${
-                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#0D3A4A]'
+              className={`w-full bg-[#1D4ED8] text-white py-3 rounded font-semibold transition ${
+                loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#1E40AF]'
               }`}
             >
               {loading ? 'Updating Password...' : 'Reset Password'}

@@ -82,8 +82,8 @@ const Calculations = () => {
   const SortIcon = ({ column }) => {
     if (sortConfig.key !== column) return <ArrowUpDown size={14} className="text-gray-400" />;
     return sortConfig.direction === 'asc' ? 
-      <ArrowUp size={14} className="text-[#06B6D4]" /> : 
-      <ArrowDown size={14} className="text-[#06B6D4]" />;
+      <ArrowUp size={14} className="text-[#1D4ED8]" /> : 
+      <ArrowDown size={14} className="text-[#1D4ED8]" />;
   };
 
   const SortableHeader = ({ label, column, align = 'left' }) => (
@@ -105,18 +105,18 @@ const Calculations = () => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#E0F2F1] p-6 rounded-lg border-l-4 border-[#0F4C63]"
+          className="bg-[#EFF6FF] p-6 rounded-lg border-l-4 border-[#1D4ED8]"
         >
-          <h3 className="text-[#0F4C63] font-semibold text-sm uppercase tracking-wide">Total Packaging Footprint</h3>
+          <h3 className="text-[#1D4ED8] font-semibold text-sm uppercase tracking-wide">Total Packaging Footprint</h3>
           <p className="text-4xl font-bold text-[#0F172A] mt-2">{totalFootprint.toLocaleString(undefined, {maximumFractionDigits: 2})} <span className="text-lg text-gray-500 font-normal">MT</span></p>
         </motion.div>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-[#E0F2F1] p-6 rounded-lg border-l-4 border-[#06B6D4]"
+            className="bg-[#EFF6FF] p-6 rounded-lg border-l-4 border-[#38BDF8]"
         >
-          <h3 className="text-[#06B6D4] font-semibold text-sm uppercase tracking-wide">Total Recycled Content</h3>
+          <h3 className="text-[#38BDF8] font-semibold text-sm uppercase tracking-wide">Total Recycled Content</h3>
           <p className="text-4xl font-bold text-[#0F172A] mt-2">{totalRecycled.toLocaleString(undefined, {maximumFractionDigits: 2})} <span className="text-lg text-gray-500 font-normal">MT</span></p>
         </motion.div>
       </div>
@@ -132,20 +132,20 @@ const Calculations = () => {
                     placeholder="Search SKU, Material..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#06B6D4] transition-all"
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] transition-all"
                 />
             </div>
         </div>
         <div className="flex gap-3 w-full md:w-auto justify-end">
           <button 
             onClick={() => setActiveTab('analytics')}
-            className="flex items-center gap-2 px-4 py-2 bg-[#06B6D4] text-white rounded hover:bg-[#0891B2] transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1D4ED8] text-white rounded hover:bg-[#1E40AF] transition"
           >
             <PieChart size={18} /> <span className="hidden sm:inline">View Analytics</span>
           </button>
           <button 
             onClick={exportResults}
-            className="flex items-center gap-2 px-4 py-2 bg-[#0F4C63] text-white rounded hover:bg-[#0D3A4A] transition"
+            className="flex items-center gap-2 px-4 py-2 bg-[#0F172A] text-white rounded hover:bg-black transition"
           >
             <Download size={18} /> <span className="hidden sm:inline">Export Excel</span>
           </button>
@@ -188,8 +188,8 @@ const Calculations = () => {
                     </td>
                     <td className="p-4 text-right">{row.salesQty}</td>
                     <td className="p-4 text-right">{row.weight}</td>
-                    <td className="p-4 text-right font-bold text-[#0F4C63]">{row.footprint.toFixed(4)}</td>
-                    <td className="p-4 text-right text-[#06B6D4]">{row.recycledContent.toFixed(4)}</td>
+                    <td className="p-4 text-right font-bold text-[#1D4ED8]">{row.footprint.toFixed(4)}</td>
+                    <td className="p-4 text-right text-[#38BDF8]">{row.recycledContent.toFixed(4)}</td>
                     </motion.tr>
                 ))}
               </AnimatePresence>

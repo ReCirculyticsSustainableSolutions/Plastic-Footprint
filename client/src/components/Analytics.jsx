@@ -64,7 +64,7 @@ const Analytics = () => {
         labels: materialLabels,
         datasets: [{
           data: materialValues,
-          backgroundColor: ['#0F4C63', '#06B6D4', '#22D3EE', '#67E8F9', '#A5F3FC', '#CFFAFE'],
+          backgroundColor: ['#1D4ED8', '#1E40AF', '#2563EB', '#38BDF8', '#0EA5E9', '#E0F2FE'],
         }]
       },
       sku: {
@@ -72,7 +72,7 @@ const Analytics = () => {
         datasets: [{
           label: 'Footprint (MT)',
           data: skuValues,
-          backgroundColor: '#0F4C63',
+          backgroundColor: '#1D4ED8',
         }]
       },
       state: {
@@ -80,14 +80,14 @@ const Analytics = () => {
         datasets: [{
           label: 'Footprint (MT)',
           data: stateValues,
-          backgroundColor: '#06B6D4',
+          backgroundColor: '#38BDF8',
         }]
       },
       recycled: {
         labels: ['Virgin Material', 'Recycled Content'],
         datasets: [{
           data: [totalVirgin, totalRecycled],
-          backgroundColor: ['#CBD5E1', '#10B981'],
+          backgroundColor: ['#CBD5E1', '#1D4ED8'],
         }]
       }
     };

@@ -46,7 +46,7 @@ const ProjectSetup = () => {
             value={projectData.name}
             onChange={handleChange}
             placeholder="e.g., Q4 2025 EPR Compliance Analysis"
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           />
         </div>
         <div className="flex flex-col">
@@ -57,7 +57,7 @@ const ProjectSetup = () => {
             value={projectData.org}
             onChange={handleChange}
             placeholder="e.g., Your Company Ltd."
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           />
         </div>
       </div>
@@ -70,7 +70,7 @@ const ProjectSetup = () => {
             name="startDate"
             value={projectData.startDate}
             onChange={handleChange}
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           />
         </div>
         <div className="flex flex-col">
@@ -80,7 +80,7 @@ const ProjectSetup = () => {
             name="endDate"
             value={projectData.endDate}
             onChange={handleChange}
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           />
         </div>
       </div>
@@ -92,7 +92,7 @@ const ProjectSetup = () => {
             name="standard"
             value={projectData.standard}
             onChange={handleChange}
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           >
             <option value="">Select Standard</option>
             <option value="India EPR Rules 2016">India EPR Rules 2016</option>
@@ -107,7 +107,7 @@ const ProjectSetup = () => {
             name="location"
             value={projectData.location}
             onChange={handleChange}
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
           >
             <option value="">Select State/Region</option>
             <option value="Maharashtra">Maharashtra</option>
@@ -128,14 +128,14 @@ const ProjectSetup = () => {
             value={projectData.notes}
             onChange={handleChange}
             placeholder="Add any relevant notes about this project..."
-            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#06B6D4] min-h-[120px]"
+            className="border border-[#E2E8F0] p-3 rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8] min-h-[120px]"
           ></textarea>
         </div>
 
       <div className="flex justify-end mt-8 gap-4">
         <button
           onClick={handleSave}
-          className="bg-[#0F4C63] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0D3A4A] transition shadow-md"
+          className="bg-[#1D4ED8] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#1E40AF] transition shadow-md"
         >
           ✓ Save & Continue to Data Input
         </button>

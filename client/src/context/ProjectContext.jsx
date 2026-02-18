@@ -33,7 +33,7 @@ export const ProjectProvider = ({ children }) => {
   const [specData, setSpecData] = useState([]);
   const [materialClassData, setMaterialClassData] = useState([]);
   const [calculatedResults, setCalculatedResults] = useState([]);
-  const [activeTab, setActiveTab] = useState('project');
+  const [activeTab, setActiveTab] = useState('input');
   const [loading, setLoading] = useState(false);
 
   // Load from localStorage on mount (optional, for persistence)
@@ -121,7 +121,6 @@ export const ProjectProvider = ({ children }) => {
       try {
           console.log("Sending POST request...");
           const res = await axios.post(`${API_URL}/api/projects`, {
-              projectData,
               bomData,
               salesData,
               specData,

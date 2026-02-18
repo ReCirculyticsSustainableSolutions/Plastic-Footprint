@@ -90,6 +90,11 @@ const DataInput = () => {
   };
 
   const handleFileUpload = (e, type) => {
+    if (!token) {
+      toast.error('Kindly login 1st');
+      e.target.value = '';
+      return;
+    }
     processFile(e.target.files[0], type);
   };
 
@@ -106,6 +111,10 @@ const DataInput = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
+    if (!token) {
+      toast.error('Kindly login 1st');
+      return;
+    }
     const files = e.dataTransfer.files;
     if (files.length > 0) {
         processFile(files[0], activeInputTab);
@@ -165,7 +174,7 @@ const DataInput = () => {
             onClick={() => setActiveInputTab(tab)}
             className={`px-4 py-3 font-medium text-sm transition-all whitespace-nowrap rounded-t-lg relative ${
               activeInputTab === tab
-                ? 'text-[#0F4C63] bg-gray-50'
+                ? 'text-[#14532D] bg-gray-50'
                 : 'text-[#475569] hover:text-[#0F172A] hover:bg-gray-50/50'
             }`}
           >
@@ -176,7 +185,7 @@ const DataInput = () => {
             {activeInputTab === tab && (
                 <motion.div 
                     layoutId="activeInputTab"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#06B6D4]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#22C55E]"
                 />
             )}
           </button>
@@ -184,7 +193,7 @@ const DataInput = () => {
       </div>
 
       <div className="mb-6">
-        <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-4">
             <h3 className="font-bold text-lg text-[#0F172A]">
                 {activeInputTab === 'bom' && 'Upload Bill of Material'}
                 {activeInputTab === 'sales' && 'Upload Sales Data'}
@@ -192,7 +201,7 @@ const DataInput = () => {
                 {activeInputTab === 'material' && 'Upload Material Classifications'}
             </h3>
             <div className="flex gap-2">
-                 <label className="flex items-center gap-2 px-4 py-2 bg-[#0F4C63] text-white rounded-lg cursor-pointer hover:bg-[#0D3A4A] transition text-sm font-medium shadow-md active:scale-95 transform">
+                 <label className="flex items-center gap-2 px-4 py-2 bg-[#1D4ED8] text-white rounded-lg cursor-pointer hover:bg-[#1E40AF] transition text-sm font-medium shadow-md active:scale-95 transform">
                     <Upload size={16} />
                     Import Excel
                     <input type="file" className="hidden" accept=".xlsx, .xls" onChange={(e) => handleFileUpload(e, activeInputTab)} />
@@ -208,12 +217,12 @@ const DataInput = () => {
             className={clsx(
                 "border-2 border-dashed rounded-xl p-8 mb-6 transition-all duration-200 flex flex-col items-center justify-center gap-3",
                 isDragging 
-                    ? "border-[#06B6D4] bg-[#ECFEFF] scale-[1.01]" 
+                    ? "border-[#38BDF8] bg-[#E0F2FE] scale-[1.01]" 
                     : "border-gray-200 bg-gray-50/50 hover:border-gray-300"
             )}
         >
-            <div className={clsx("p-4 rounded-full transition-colors", isDragging ? "bg-[#CFFAFE]" : "bg-white shadow-sm")}>
-                <Upload size={24} className={isDragging ? "text-[#06B6D4]" : "text-gray-400"} />
+            <div className={clsx("p-4 rounded-full transition-colors", isDragging ? "bg-[#DBEAFE]" : "bg-white shadow-sm")}>
+                <Upload size={24} className={isDragging ? "text-[#38BDF8]" : "text-gray-400"} />
             </div>
             <div className="text-center">
                 <p className="font-medium text-gray-700">
@@ -221,7 +230,7 @@ const DataInput = () => {
                 </p>
                 <p className="text-sm text-gray-400 mt-1">or click "Import Excel" button above</p>
             </div>
-            {isLoading && <p className="text-[#06B6D4] font-medium animate-pulse">Processing file...</p>}
+            {isLoading && <p className="text-[#1D4ED8] font-medium animate-pulse">Processing file...</p>}
         </div>
 
         <AnimatePresence mode='wait'>
@@ -242,23 +251,23 @@ const DataInput = () => {
 
       <div className="flex justify-between mt-6 pt-6 border-t border-[#E2E8F0]">
         <button
-            onClick={() => {
-                if(token) saveProjectToCloud(); // Auto-save input data
-                setActiveTab('setup');
-            }}
-            className="px-6 py-2 text-[#475569] hover:text-[#0F172A] font-medium transition"
+          onClick={() => {
+            setActiveTab('input');
+          }}
+          className="px-6 py-2 text-[#475569] hover:text-[#0F172A] font-medium transition"
         >
-            ← Back to Setup
+          ← Back to Setup
         </button>
-        <button
+        {activeInputTab === 'material' && (
+          <button
             onClick={() => {
-                if(token) saveProjectToCloud(); // Auto-save input data before calculation
-                calculateFootprints();
+              calculateFootprints();
             }}
-            className="bg-[#0F4C63] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#0D3A4A] transition shadow-lg flex items-center gap-2"
-        >
-             Run Calculation & Save →
-        </button>
+            className="bg-[#1D4ED8] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#1E40AF] transition shadow-lg flex items-center gap-2"
+          >
+            Run Calculation & Save →
+          </button>
+        )}
       </div>
     </motion.div>
   );
