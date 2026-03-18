@@ -2,7 +2,7 @@ import React from 'react';
 import { useProject } from '../context/ProjectContext';
 import { FileInput, Calculator, PieChart, LogIn, Trash2, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 
 const Sidebar = () => {
   const { activeTab, setActiveTab, clearAll, user } = useProject();
@@ -15,20 +15,20 @@ const Sidebar = () => {
   ];
 
   return (
-    <motion.div 
+    <Motion.div 
       initial={{ x: -280 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.5, type: 'spring' }}
       className="w-[280px] bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white p-6 shadow-2xl h-screen sticky top-0 overflow-y-auto border-r border-white/10 hidden md:flex flex-col z-10"
     >
-      <motion.h2 
+      <Motion.h2 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
         className="text-xl font-bold mb-2 tracking-tight flex items-center gap-3"
       >
         <span className="text-2xl">📦</span> Packaging Footprint
-      </motion.h2>
+      </Motion.h2>
       <p className="text-xs text-white/70 mb-6 pl-1">
         Track and analyse your plastic packaging impact.
       </p>
@@ -44,7 +44,7 @@ const Sidebar = () => {
         </div>
         <div className="space-y-2">
           {menuItems.map((item) => (
-            <motion.button
+            <Motion.button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               whileHover={{ scale: 1.02, x: 5 }}
@@ -56,7 +56,7 @@ const Sidebar = () => {
               }`}
             >
               {activeTab === item.id && (
-                <motion.div
+                <Motion.div
                   layoutId="activeTab"
                   className="absolute inset-0 bg-white/5"
                   initial={false}
@@ -73,32 +73,32 @@ const Sidebar = () => {
                   activeTab === item.id ? 'translate-x-0 text-[#38BDF8]' : 'translate-x-1 text-white/30'
                 }`}
               />
-            </motion.button>
+            </Motion.button>
           ))}
         </div>
       </div>
       
       <div className="pt-4 border-t border-white/15 space-y-2">
-        <motion.button 
+        <Motion.button 
           whileHover={{ scale: 1.02, backgroundColor: "rgba(239, 68, 68, 0.2)" }}
           whileTap={{ scale: 0.98 }}
           onClick={clearAll}
           className="w-full text-left flex items-center gap-3 p-3 rounded-lg text-sm text-red-200 hover:text-red-100 transition"
         >
           <Trash2 size={18} /> New Project (Clear)
-        </motion.button>
+        </Motion.button>
         {!user && (
-          <motion.button 
+          <Motion.button 
             whileHover={{ scale: 1.02, backgroundColor: "rgba(37, 99, 235, 0.2)" }}
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/login')}
             className="w-full text-left flex items-center gap-3 p-3 rounded-lg text-sm text-blue-300 hover:text-blue-100 transition"
           >
             <LogIn size={18} /> Login
-          </motion.button>
+          </Motion.button>
         )}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 };
 

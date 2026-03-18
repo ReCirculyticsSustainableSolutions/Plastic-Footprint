@@ -48,7 +48,7 @@ export const ProjectProvider = ({ children }) => {
         setSpecData(parsed.specData || []);
         setMaterialClassData(parsed.materialClassData || []);
         setCalculatedResults(parsed.calculatedResults || []);
-      } catch (e) {
+      } catch {
         console.error("Failed to load project from local storage");
       }
     }
@@ -83,9 +83,9 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
-  const signup = async (name, email, password) => {
+  const signup = async (name, email, mobile, password) => {
     try {
-        await axios.post(`${API_URL}/api/user/register`, { name, email, password });
+        await axios.post(`${API_URL}/api/user/register`, { name, email, mobile, password });
         return { success: true };
     } catch (err) {
         console.error(err);

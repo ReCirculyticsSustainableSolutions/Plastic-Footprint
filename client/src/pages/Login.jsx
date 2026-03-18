@@ -11,6 +11,7 @@ const Login = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    mobile: '',
     password: ''
   });
   const [resetData, setResetData] = useState({
@@ -44,8 +45,13 @@ const Login = () => {
   };
 
   const handleSignup = async () => {
-    if (!formData.name || !formData.email || !formData.password) {
+    if (!formData.name || !formData.email || !formData.mobile || !formData.password) {
       toast.error('Please fill all fields');
+      return;
+    }
+    const normalizedMobile = String(formData.mobile).replace(/[^\d]/g, '');
+    if (normalizedMobile.length < 10 || normalizedMobile.length > 15) {
+      toast.error('Please enter a valid mobile number');
       return;
     }
     if (formData.password.length < 6) {
@@ -53,7 +59,7 @@ const Login = () => {
       return;
     }
     setLoading(true);
-    const result = await signup(formData.name, formData.email, formData.password);
+    const result = await signup(formData.name, formData.email, normalizedMobile, formData.password);
     setLoading(false);
     if (result.success) {
       toast.success('Account created. Please sign in.');
@@ -183,6 +189,17 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
+                className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-[#0F172A]">Mobile Number</label>
+              <input
+                type="tel"
+                name="mobile"
+                value={formData.mobile}
+                onChange={handleChange}
+                placeholder="9876543210"
                 className="w-full p-3 border border-[#E2E8F0] rounded bg-[#F1F5F9] focus:outline-none focus:ring-2 focus:ring-[#1D4ED8]"
               />
             </div>

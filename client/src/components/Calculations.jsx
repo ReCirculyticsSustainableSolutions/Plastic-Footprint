@@ -2,7 +2,32 @@ import React, { useState, useMemo } from 'react';
 import { useProject } from '../context/ProjectContext';
 import * as XLSX from 'xlsx';
 import { Download, PieChart, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
+
+const SortIcon = ({ active, direction }) => {
+  if (!active) return <ArrowUpDown size={14} className="text-gray-400" />;
+  return direction === 'asc'
+    ? <ArrowUp size={14} className="text-[#1D4ED8]" />
+    : <ArrowDown size={14} className="text-[#1D4ED8]" />;
+};
+
+const SortableHeader = ({ label, column, align = 'left', sortKey, sortDirection, onSort }) => {
+  const isActive = sortKey === column;
+  const alignClassName = align === 'right' ? 'text-right' : 'text-left';
+  const justifyClassName = align === 'right' ? 'justify-end' : 'justify-start';
+
+  return (
+    <th
+      className={`p-4 border-b cursor-pointer hover:bg-gray-100 transition-colors select-none ${alignClassName}`}
+      onClick={() => onSort(column)}
+    >
+      <div className={`flex items-center gap-2 ${justifyClassName}`}>
+        {label}
+        <SortIcon active={isActive} direction={sortDirection} />
+      </div>
+    </th>
+  );
+};
 
 const Calculations = () => {
   const { calculatedResults, setActiveTab } = useProject();
@@ -79,38 +104,19 @@ const Calculations = () => {
   const totalFootprint = calculatedResults.reduce((sum, r) => sum + r.footprint, 0);
   const totalRecycled = calculatedResults.reduce((sum, r) => sum + r.recycledContent, 0);
 
-  const SortIcon = ({ column }) => {
-    if (sortConfig.key !== column) return <ArrowUpDown size={14} className="text-gray-400" />;
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUp size={14} className="text-[#1D4ED8]" /> : 
-      <ArrowDown size={14} className="text-[#1D4ED8]" />;
-  };
-
-  const SortableHeader = ({ label, column, align = 'left' }) => (
-    <th 
-      className={`p-4 border-b cursor-pointer hover:bg-gray-100 transition-colors select-none text-${align}`}
-      onClick={() => handleSort(column)}
-    >
-      <div className={`flex items-center gap-2 ${align === 'right' ? 'justify-end' : 'justify-start'}`}>
-        {label}
-        <SortIcon column={column} />
-      </div>
-    </th>
-  );
-
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <motion.div 
+        <Motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-[#EFF6FF] p-6 rounded-lg border-l-4 border-[#1D4ED8]"
         >
           <h3 className="text-[#1D4ED8] font-semibold text-sm uppercase tracking-wide">Total Packaging Footprint</h3>
           <p className="text-4xl font-bold text-[#0F172A] mt-2">{totalFootprint.toLocaleString(undefined, {maximumFractionDigits: 2})} <span className="text-lg text-gray-500 font-normal">MT</span></p>
-        </motion.div>
-        <motion.div 
+        </Motion.div>
+        <Motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -118,7 +124,7 @@ const Calculations = () => {
         >
           <h3 className="text-[#38BDF8] font-semibold text-sm uppercase tracking-wide">Total Recycled Content</h3>
           <p className="text-4xl font-bold text-[#0F172A] mt-2">{totalRecycled.toLocaleString(undefined, {maximumFractionDigits: 2})} <span className="text-lg text-gray-500 font-normal">MT</span></p>
-        </motion.div>
+        </Motion.div>
       </div>
 
       {/* Action Bar */}
@@ -158,20 +164,20 @@ const Calculations = () => {
           <table className="w-full text-sm text-left">
             <thead className="bg-[#F8FAFC] text-[#475569] font-semibold sticky top-0 z-10 shadow-sm">
               <tr>
-                <SortableHeader label="SKU Code" column="skuCode" />
-                <SortableHeader label="Component" column="compCode" />
-                <SortableHeader label="Material" column="material" />
-                <SortableHeader label="Class" column="materialClass" />
-                <SortableHeader label="Sales Qty" column="salesQty" align="right" />
-                <SortableHeader label="Weight (g)" column="weight" align="right" />
-                <SortableHeader label="Footprint (MT)" column="footprint" align="right" />
-                <SortableHeader label="Recycled (MT)" column="recycledContent" align="right" />
+                <SortableHeader label="SKU Code" column="skuCode" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Component" column="compCode" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Material" column="material" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Class" column="materialClass" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Sales Qty" column="salesQty" align="right" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Weight (g)" column="weight" align="right" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Footprint (MT)" column="footprint" align="right" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
+                <SortableHeader label="Recycled (MT)" column="recycledContent" align="right" sortKey={sortConfig.key} sortDirection={sortConfig.direction} onSort={handleSort} />
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E2E8F0]">
               <AnimatePresence>
                 {processedResults.slice(0, 100).map((row, idx) => (
-                    <motion.tr 
+                    <Motion.tr 
                         key={`${row.skuCode}-${idx}`}
                         layout
                         initial={{ opacity: 0 }}
@@ -190,12 +196,12 @@ const Calculations = () => {
                     <td className="p-4 text-right">{row.weight}</td>
                     <td className="p-4 text-right font-bold text-[#1D4ED8]">{row.footprint.toFixed(4)}</td>
                     <td className="p-4 text-right text-[#38BDF8]">{row.recycledContent.toFixed(4)}</td>
-                    </motion.tr>
+                    </Motion.tr>
                 ))}
               </AnimatePresence>
               {processedResults.length === 0 && (
                   <tr>
-                      <td colspan="8" className="p-8 text-center text-gray-500">
+                      <td colSpan={8} className="p-8 text-center text-gray-500">
                           No results match your search.
                       </td>
                   </tr>

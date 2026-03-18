@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useProject } from '../context/ProjectContext';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -99,7 +99,7 @@ const Analytics = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-10">
-      <motion.div 
+      <Motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
@@ -109,9 +109,9 @@ const Analytics = () => {
         <div className="h-[300px] flex justify-center">
             <Doughnut data={chartsData.material} options={{ maintainAspectRatio: false }} />
         </div>
-      </motion.div>
+      </Motion.div>
 
-      <motion.div 
+      <Motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -121,9 +121,9 @@ const Analytics = () => {
         <div className="h-[300px]">
             <Bar data={chartsData.sku} options={{ maintainAspectRatio: false, indexAxis: 'y' }} />
         </div>
-      </motion.div>
+      </Motion.div>
 
-      <motion.div 
+      <Motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -133,9 +133,9 @@ const Analytics = () => {
         <div className="h-[300px]">
             <Bar data={chartsData.state} options={{ maintainAspectRatio: false }} />
         </div>
-      </motion.div>
+      </Motion.div>
 
-      <motion.div 
+      <Motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -145,7 +145,7 @@ const Analytics = () => {
         <div className="h-[300px] flex justify-center">
             <Doughnut data={chartsData.recycled} options={{ maintainAspectRatio: false }} />
         </div>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 };

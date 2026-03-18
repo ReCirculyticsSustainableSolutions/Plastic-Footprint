@@ -5,28 +5,44 @@ const jwt = require('jsonwebtoken');
 
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { name, email, mobile, password } = req.body;
+
+    const normalizedName = String(name || '').trim();
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const normalizedMobile = String(mobile || '').replace(/[^\d]/g, '');
+
+    if (!normalizedName || !normalizedEmail || !normalizedMobile || !password) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+    if (normalizedMobile.length < 10 || normalizedMobile.length > 15) {
+      return res.status(400).json({ message: 'Please enter a valid mobile number' });
     }
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
     
     // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: 'User already exists' });
+    const existingUserByEmail = await User.findOne({ email: normalizedEmail });
+    if (existingUserByEmail) return res.status(400).json({ message: 'User already exists' });
+
+    const existingUserByMobile = await User.findOne({ mobile: normalizedMobile });
+    if (existingUserByMobile) return res.status(400).json({ message: 'Mobile number already registered' });
 
     // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const newUser = new User({ name, email, password: hashedPassword });
-    const savedUser = await newUser.save();
+    const newUser = new User({ name: normalizedName, email: normalizedEmail, mobile: normalizedMobile, password: hashedPassword });
+    await newUser.save();
 
     res.status(201).json({ message: 'User created successfully' });
   } catch (err) {
+    if (err && err.code === 11000) {
+      if (err.keyPattern?.email) return res.status(400).json({ message: 'User already exists' });
+      if (err.keyPattern?.mobile) return res.status(400).json({ message: 'Mobile number already registered' });
+      return res.status(400).json({ message: 'Duplicate field value' });
+    }
     res.status(500).json({ error: err.message });
   }
 });
@@ -39,7 +55,8 @@ router.post('/login', async (req, res) => {
     }
 
     // Check user
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(400).json({ message: 'User not found' });
 
     // Validate password
@@ -49,7 +66,7 @@ router.post('/login', async (req, res) => {
     // Create token
     const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET || 'secretKey', { expiresIn: '1h' });
 
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, mobile: user.mobile } });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -64,7 +81,8 @@ router.post('/forgot-password', async (req, res) => {
     if (newPassword.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }

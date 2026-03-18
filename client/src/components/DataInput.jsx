@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { useProject } from '../context/ProjectContext';
-import { Upload, Plus, Trash2, FileSpreadsheet } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Upload, FileSpreadsheet } from 'lucide-react';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { clsx } from 'clsx';
 
@@ -18,7 +18,6 @@ const DataInput = () => {
     materialClassData, setMaterialClassData,
     calculateFootprints,
     token,
-    saveProjectToCloud,
     setActiveTab
   } = useProject();
 
@@ -142,7 +141,7 @@ const DataInput = () => {
                 </tr>
             ) : (
                 data.map((row, idx) => (
-                    <motion.tr 
+                    <Motion.tr 
                         key={idx} 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -152,7 +151,7 @@ const DataInput = () => {
                         {Object.values(row).map((val, i) => (
                             <td key={i} className="p-3 whitespace-nowrap">{val}</td>
                         ))}
-                    </motion.tr>
+                    </Motion.tr>
                 ))
             )}
           </tbody>
@@ -161,7 +160,7 @@ const DataInput = () => {
   );
 
   return (
-    <motion.div 
+    <Motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="bg-white p-6 rounded-xl shadow-lg border border-[#E2E8F0]"
@@ -183,7 +182,7 @@ const DataInput = () => {
             {tab === 'spec' && 'Specification'}
             {tab === 'material' && 'Material Classification'}
             {activeInputTab === tab && (
-                <motion.div 
+                <Motion.div 
                     layoutId="activeInputTab"
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#22C55E]"
                 />
@@ -234,7 +233,7 @@ const DataInput = () => {
         </div>
 
         <AnimatePresence mode='wait'>
-            <motion.div
+            <Motion.div
                 key={activeInputTab}
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -245,7 +244,7 @@ const DataInput = () => {
                 {activeInputTab === 'sales' && renderTable(salesData, ['Date', 'SKU Code', 'SKU Desc', 'State', 'Qty (MT)'])}
                 {activeInputTab === 'spec' && renderTable(specData, ['Comp Code', 'Comp Desc', 'Base UOM', 'Material', 'Composition %', 'Recycled %', 'Weight (g)', 'Flexibility', 'Mat Class'])}
                 {activeInputTab === 'material' && renderTable(materialClassData, ['Material', 'Classification'])}
-            </motion.div>
+            </Motion.div>
         </AnimatePresence>
       </div>
 
@@ -269,7 +268,7 @@ const DataInput = () => {
           </button>
         )}
       </div>
-    </motion.div>
+    </Motion.div>
   );
 };
 
